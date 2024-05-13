@@ -1,0 +1,160 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+    <div class="container">
+        <div style="margin-bottom: 10px">
+        </div>
+        <div class="panel panel-default">
+            <!-- Default panel contents -->
+            <div class="panel-heading">
+                <span class="glyphicon glyphicon-th-list" aria-hidden="true"></span>
+                {{request.session.info.name}}的电影评论列表
+            </div>
+
+            <!-- Table -->
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <th>电影名称</th>
+                    <th>评论内容</th>
+                    <th>获赞数量</th>
+                    <th>评论时间</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for obj in queryset %}
+                    <tr>
+                        <th>{{ obj.movie_name}}</th>
+                        <th>{{ obj.content }}</th>
+                        <th>{{ obj.votes }}</th>
+                        <th>{{ obj.comment_time }}</th>
+                        <td>
+                            <button type='button' class='btn btn-primary btn-xs' id='commentedit' data-comment-id='{{obj.comment_id}}' data-comment-content='{{obj.content}}'>编辑</button>
+                            <button type='button' class='btn btn-danger btn-xs' id='commentdelete' data-comment-id='{{obj.comment_id}}'>删除</button>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% for obj in queryset %}
+        {{obj.xx}}
+        {% endfor %}
+
+        <ul class="pagination">
+            {{ page_string }}
+        </ul>
+        <div class="modal fade" id="commentModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="commentModalLabel">新建</h4>
+                    </div>
+                    <div class="modal-body">
+    
+                        <form id="commentformAdd">
+                            <div class="clearfix">
+                                    <div class="col-xs-6">
+                                        <div class="form-group" style="position: relative;margin-bottom: 20px;">
+                                            <label>评论</label>
+                                            {{commentform.content}}
+                                            <span class="error-msg" style="color: red;position: absolute;"></span>
+                                        </div>
+                                    </div>
+                            </div>
+                        </form>
+    
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">取 消</button>
+                        <button id="commentbtnSave" type="button" class="btn btn-primary">提 交</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script type="text/javascript">
+        var EDIT_ID;
+        $(function () {
+            CommentdeleteEvent();
+            CommenteditEvent();
+            CommentsaveEvent();
+        })
+        function CommentdeleteEvent(){
+            $(".btn-danger").click(function(){
+                EDIT_ID = $(this).data('comment-id');
+                $.ajax({
+                    url: "/comment/delete/",
+                    type: "post",
+                    data: {
+                        'comment_id': EDIT_ID,
+                    },
+                    dataType: "JSON",
+                    success: function (res) {
+                        if (res.status) {
+                            alert('删除成功');
+                            location.reload();
+                        } else {
+                            alert('出错了');
+                        }
+                    }
+                })
+            });
+        }
+        function CommenteditEvent(){
+            $(".btn-primary").click(function(){
+                EDIT_ID = $(this).data('comment-id');
+                $("#commentformAdd")[0].reset();
+                $("#comment_content").val($(this).data('comment-content'));
+                // 修改对话框的标题
+                $("#commentModalLabel").text("编辑");
+                // 点击编辑，显示对话框
+                $('#commentModal').modal('show');
+            });
+        }
+        function CommentsaveEvent(){
+            $("#commentbtnSave").click(function(){
+                $(".error-msg").empty();
+                if(EDIT_ID)
+                {
+                    do_commentedit();
+                    EDIT_ID = undefined;
+                }
+                else{
+                    do_commentadd();
+                }
+            })
+        }
+        function do_commentedit(){
+            var commentContent = $("#comment_content").val(); // 获取评论内容输入框的值
+            var comment_id = EDIT_ID;
+            $.ajax({
+                url:"/comment/edit/",
+                type:"post",
+                data:{
+                    'comment_id':comment_id,
+                    'comment':commentContent,
+                },
+                dataType:"JSON",
+                success:function(res){
+                    if(res.status){
+                        alert("修改成功");
+                        $("#commentformAdd")[0].reset();
+                        $("#commentModal").modal('hide');
+                        location.reload();
+                    }
+                    else{
+                        alert('出错了');
+                    }
+                }
+            })
+        }
+    </script>
+{% endblock %}

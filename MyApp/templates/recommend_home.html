@@ -1,0 +1,110 @@
+{% extends 'layout.html' %}
+
+{% block css %}
+    <!-- 这里可以添加针对电影列表的样式 -->
+    <style>
+        /* 电影列表样式示例 */
+        .movie-list {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .movie-item {
+            width: 19%;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .movie-thumbnail {
+            width: 100%;
+            height: 250px;
+            margin-bottom: 10px;
+        }
+
+        .movie-title {
+            text-align: center;
+            font-size: 16px;
+            margin: 0;
+        }
+    </style>
+{% endblock css %}
+
+{% block content %}
+    <div class="container">
+        <div>
+            <h2 style="text-align: center;">
+                如果第一次使用本系统，请对以下电影评分
+            </h2>
+        </div>
+        <div class="modal-header text-center">
+                <button id="reload" type="button" class="btn btn-primary">换 一 批</button>
+                <button id="recommend_btn" type="button" class="btn btn-primary">推 荐</button>
+        </div>
+        {% if error %}
+        <div class="modal-header text-center" style='color:red;'>
+            {{error}}
+        </div> 
+        {% endif %}
+        <ul class="movie-list">
+            {% for obj in queryset %}
+            <li class="movie-item">
+                <img class="movie-thumbnail" src="{{ obj.cover }}" alt="电影海报:{{ obj.name }}">
+                <h3 class="movie-title"><a href="/movie/subject/{{ obj.movie_id }}">{{ obj.name }}</a></h3>
+                
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- 模态框 -->
+    <div class="modal fade" id="loadingModal" tabindex="-1" aria-labelledby="loadingModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg"> <!-- 使用 modal-lg 类增加模态框的大小 -->
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2" style="font-size: 18px;">请稍候...</p> <!-- 修改字体大小 -->
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}
+
+{% block js %}
+    <!-- 这里可以添加针对电影列表的 JavaScript 代码 -->
+    <script>
+        $(function(){
+            InitBtn();
+            
+        })
+        function InitBtn(){
+            $("#reload").click(function(){
+                location.reload();
+            })
+            $("#recommend_btn").click(function(){
+                $("#loadingModal").modal('show');
+                $.ajax({
+                    url:'/recommend/check/',
+                    type:'post',
+                    dataType:'JSON',
+                    success:function(res){
+                        if(res.status){
+                            window.location.href = '/recommend/list/';
+                        }
+                        else{
+                            alert('如果第一次使用本系统，请对以下电影评分');
+                        }
+                    }
+                })
+            })
+        }
+        // 可以在这里添加一些与电影列表相关的 JavaScript 功能
+    </script>
+{% endblock js %}

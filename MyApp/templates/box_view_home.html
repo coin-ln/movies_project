@@ -1,0 +1,204 @@
+{% extends 'layout.html' %}
+{% load static %}
+{% block css %}
+    <style>
+        .pull-left{
+            margin-top:10px;
+        }
+        .control-label{
+            margin-top:3px;
+        }
+    </style>
+
+{% endblock css %}
+
+{% block content %}
+<div class="container">
+    <div class="panel panel-default">
+        <div class="panel-heading clearfix">
+            <h4 class="pull-left">2012-2023年票房数据总体信息</h4>
+            <div class="pull-right">
+                <form class="form-inline">
+                    <div class="form-group" style="margin-right: 10px;">
+                        <label class="control-label" for="condition1">图表：</label>
+                        <select class="form-control" id="chart1_condition1">
+                            <option>电影票房排行榜前十名</option>
+                            <option>演员票房排行榜前十名</option>
+                            <option>各类型票房占比</option>
+                            <option>各地区票房占比</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-right: 10px;">
+                        <label class="control-label" for="condition2">年份：</label>
+                        <select class="form-control" id="chart1_condition2">
+                            {% for year in years %}
+                            <option>{{year}}年</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="chart1_button" data-chart='chart1'>应用</button>
+                </form>
+            </div>
+        </div>
+        <div class="panel-body">
+            <div id="m1" style="width: 100%;height: 550px"></div>
+        </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-heading clearfix">
+            <h4 class="pull-left">2012-2023年数据票房变化信息</h4>
+            <div class="pull-right">
+                <form class="form-inline">
+                    <div class="form-group" style="margin-right: 10px;">
+                        <label class="control-label" for="condition1">图表：</label>
+                        <select class="form-control" id="chart2_condition1">
+                            <option>各类型票房变化河流图</option>
+                            <option>各地区票房变化河流图</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="chart2_button" data-chart='chart2'>应用</button>
+                </form>
+            </div>
+        </div>
+        <div class="panel-body">
+            <div id="m2" style="width: 100%;height: 550px"></div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="panel panel-default">
+                <div class="panel-heading">演员代表作及其票房</div>
+                <div class="pull-right">
+                    <form class="form-inline">
+                        <div class="form-group" style="margin-right: 10px;">
+                            <label class="control-label" for="condition1">图表：</label>
+                            <input list="actors" class="form-control" id="chart3_condition1">
+                            <datalist id="actors">
+                                {% for actor in actors %}
+                                <option>{{ actor }}</option>
+                                {% endfor %}
+                            </datalist>
+                        </div>
+                        <button type="button" class="btn btn-primary" style='margin-right:5px;' id="chart3_button" data-chart='chart3'>应用</button>
+                    </form>
+                </div>
+                <div class="panel-body">
+                    <div id="m3" style="width: 100%;height: 500px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="panel panel-default">
+                <div class="panel-heading">演员导演合作票房前五十名</div>
+                <div class="panel-body">
+                    <div id="m4" style="width: 100%;height: 500px;overflow-y: auto;">
+                        <table class="table table-bordered">
+                            <thead>
+                            <tr>
+                                <th>导演</th>
+                                <th>演员</th>
+                                <th>票房</th>
+                                <th>合作次数</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for obj in table_4 %}
+                                <tr>
+                                    <th>{{ obj.0}}</th>
+                                    <th>{{ obj.1 }}</th>
+                                    <th>{{ obj.2 }}万元</th>
+                                    <th>{{ obj.3 }}次数</th>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'js/echarts.js' %}"></script>
+<script type="text/javascript">
+
+    $(function () {
+        initchart1();
+        initchart2();
+        initchart3();
+    })
+    function initchart1(){
+        $("#chart1_button").click(function(){
+            var opt_1 = $("#chart1_condition1").val();
+            var opt_2 = $("#chart1_condition2").val();
+            var chart1 = echarts.init(document.getElementById("m1"));
+            $.ajax({
+                url:'/box/chart1/',
+                type:'post',
+                data:{
+                    'title_text':opt_1,
+                    'year':opt_2,
+                },
+                dataType:'JSON',
+                success:function(res){
+                    if(res.status){
+                        chart1.clear();
+                        chart1.setOption(res.data);
+                    }
+                    else{
+                        alert("No!");
+                    }
+                }
+            })
+        })
+    }
+    function initchart2(){
+        $("#chart2_button").click(function(){
+            var opt = $("#chart2_condition1").val();
+            var chart2 = echarts.init(document.getElementById("m2"));
+            $.ajax({
+                url:'/box/chart2/',
+                type:'post',
+                data:{
+                    'title_text':opt,
+                },
+                dataType:'JSON',
+                success:function(res){
+                    if(res.status){
+                        chart2.clear();
+                        chart2.setOption(res.data);
+                    }
+                    else{
+                        alert("No!");
+                    }
+                }
+            })
+        })
+    }
+    function initchart3(){
+        $("#chart3_button").click(function(){
+            var opt = $("#chart3_condition1").val();
+            var chart3 = echarts.init(document.getElementById("m3"));
+            $.ajax({
+                url:'/box/chart3/',
+                type:'post',
+                data:{
+                    'actor':opt,
+                },
+                dataType:'JSON',
+                success:function(res){
+                    if(res.status){
+                        chart3.clear();
+                        chart3.setOption(res.data);
+                    }
+                    else{
+                        alert("没有该演员的信息");
+                    }
+                }
+            })
+        })
+    }
+</script>
+{% endblock %}

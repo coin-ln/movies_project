@@ -1,0 +1,58 @@
+{% extends 'layout.html' %}
+
+{% block css %}
+    <!-- 这里可以添加针对电影列表的样式 -->
+    <style>
+        /* 电影列表样式示例 */
+        .movie-list {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .movie-item {
+            width: 19%;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .movie-thumbnail {
+            width: 100%;
+            height: 250px;
+            margin-bottom: 10px;
+        }
+
+        .movie-title {
+            text-align: center;
+            font-size: 16px;
+            margin: 0;
+        }
+    </style>
+{% endblock css %}
+
+{% block content %}
+    <div class="container">
+        <h2 style="text-align: center;">推荐电影列表</h2>
+        <ul class="movie-list">
+            {% for obj in queryset %}
+            <li class="movie-item">
+                <img class="movie-thumbnail" src="{{ obj.cover }}" alt="电影海报:{{ obj.name }}">
+                <h3 class="movie-title"><a href="/movie/subject/{{ obj.movie_id }}">{{ obj.name }}</a></h3>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock content %}
+
+{% block js %}
+    <!-- 这里可以添加针对电影列表的 JavaScript 代码 -->
+    <script>
+        // 可以在这里添加一些与电影列表相关的 JavaScript 功能
+    </script>
+{% endblock js %}

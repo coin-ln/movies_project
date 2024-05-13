@@ -1,0 +1,132 @@
+{% extends 'layout.html' %}
+{% load static %}
+{% block css %}
+    <style>
+        .pull-left{
+            margin-top:10px;
+        }
+        .control-label{
+            margin-top:3px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        caption {
+            caption-side: top;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+    </style>
+
+{% endblock css %}
+
+{% block content %}
+<div class="container">
+    <div class="panel panel-default">
+        <div class="panel-heading clearfix">
+            <h4 class="pull-left">电影票房预测</h4>
+        </div>
+        <div class="panel-body">
+            <div style="width: 100%;height: 400px">
+                <form id="formAdd">
+                    <div class="clearfix">
+                        {% for field in form %}
+                            <div class="col-xs-6">
+                                <div class="form-group" style="position: relative;margin-bottom: 20px;">
+                                    <label>{{ field.label }}</label>
+                                    {{ field }}
+                                    <span class="error-msg" style="color: red;position: absolute;"></span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </form>
+                <div class="modal-header text-center">
+                    <button id="btnSave" type="button" class="btn btn-primary">预 测</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-heading clearfix">
+            <h4 class="pull-left">预测结果</h4>
+        </div>
+        <div class="panel-body">
+            <div id="table-container" style="width: 100%;height: 200px">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'js/echarts.js' %}"></script>
+<script type="text/javascript">
+
+    $(function () {
+        SubmitForm();
+    })
+    function SubmitForm(){
+        $('#btnSave').click(function(){
+            $.ajax({
+                url:'/box/getinfo/',
+                type:'post',
+                data:$('#formAdd').serialize(),
+                dataType:'JSON',
+                success:function(res){
+                    if(res.status){
+                        var tableHtml = '<table class="table">';
+                        tableHtml += '<thead><tr>';
+                        tableHtml +="<th>模型</th>"
+                        $.each(res.mods_name, function(index,header) {
+                            tableHtml += '<th>' + header + '模型</th>';
+                        });
+                        tableHtml += '</tr></thead>';
+                        tableHtml += '<tbody>';
+                        tableHtml += '<tr>';
+                        tableHtml +="<th>票房预测结果</th>"
+                        $.each(res.result, function(index,cell) {
+                            cell = parseFloat(cell).toFixed(2);
+                            tableHtml += '<td>' + cell + '万元</td>';
+                        });
+                        tableHtml += '</tr>';
+                        tableHtml += '<tr>';
+                        tableHtml +="<th>训练集mse</th>"
+                            $.each(res.mse, function(index,cell) {
+                                //cell = parseFloat(cell).toFixed(2);
+                                tableHtml += '<td>' + cell + '</td>';
+                            });
+                            tableHtml += '</tr>';
+                        tableHtml += '</tbody></table>';
+        
+                        // 显示表格
+                        $('#table-container').html(tableHtml); 
+                    }
+                    else{
+                        if (res.tips) {
+                            alert(res.tips);
+                        } else {
+                            // 把错误信息显示在对话框中。
+                            $.each(res.error, function (name, errorList) {
+                                $("#id_" + name).next().text(errorList[0]);
+                            })
+                        }
+                    }
+                }
+            })
+        })
+    }
+</script>
+{% endblock %}

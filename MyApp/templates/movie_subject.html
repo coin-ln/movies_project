@@ -1,0 +1,443 @@
+{% extends 'layout.html' %}
+
+{% block css %}
+    <!-- 这里可以添加针对电影列表的样式 -->
+    <style>
+        /* 电影列表样式示例 */
+        .movie-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .movie-item {
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .movie-thumbnail {
+            width: 171px; /* 自动适应宽度 */
+            height: 250px; /* 调整图像的高度 */
+            margin-right: 20px;
+        }
+
+        .movie-info {
+            flex: 1;
+        }
+
+        .movie-actions {
+            display: flex;
+            align-items: center;
+            margin-left: 10px;
+        }
+
+        .movie-action {
+            margin-right: 10px;
+        }
+        .comment {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px; /* Add margin between comments */
+            border: 1px solid #ccc;
+        }
+        .comment-buttons{
+            display: flex;
+            margin-top: 15px; /* Add some space between buttons */
+            margin-right:10px;
+        }
+        .comment-buttons button {
+            margin-left: 5px; /* Add some space between buttons */
+        }
+        
+        
+    </style>
+{% endblock css %}
+
+{% block content %}
+    <div class="container">
+        <div class='container' style="display: flex; align-items: center;">
+            <h2 style="flex: 1;">电影详情</h2>
+            <div style="width: 300px;">
+                <form method="get">
+                    <div class="input-group">
+                        <input type="text" name="q" class="form-control" placeholder="Search for..."
+                               value="{{ search_data }}">
+                        <span class="input-group-btn">
+                            <button class="btn btn-default" type="submit">
+                                <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                            </button>
+                        </span>
+                    </div>
+                </form>
+            </div>
+        </div>        
+        <ul class="movie-list">
+            <li class="movie-item">
+                <div>
+                    <img class="movie-thumbnail" src={{instance.cover}} alt="电影海报:{{instance.name}}">
+                </div>
+                <div class="movie-info">
+                    <h3 class="movie-title"><a href="/movie/subject/{{instance.movie_id}}">{{instance.name}}</a></h3>
+                    <p><strong>导演：</strong>{{ instance.directors }}</p>
+                    <p><strong>演员：</strong>{{ instance.actors }}</p>
+                    <p><strong>类型：</strong>{{ instance.genres }}</p>
+                    <p><strong>语言/时长：</strong>{{ instance.languages }}/{{instance.mins}}分钟</p>
+                    <p class="movie-description"><strong>简介：</strong>{{instance.storyline}}</p>
+                    <div style="display: none;" id="movie_id">{{ instance.movie_id }}</div>
+                </div>
+                <div class="movie-actions" style="display: flex; flex-direction: column;">
+                    <div class="top-actions">
+                        <!-- 在上方的模块 -->
+                        <div class="douban-rating" style="margin-bottom: 10px;">
+                            <strong>豆瓣评分：</strong>
+                            {% if instance.douban_score != '0.0' %}
+                            <span>{{ instance.douban_score }}</span>
+                            {% else %}
+                            <span>暂未评分</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% comment %} <div class="bottom-actions">
+                        <!-- 在下方的模块 -->
+                            <button class="movie-action">添加收藏</button>
+                            <!-- 添加更多功能按钮 -->
+                    </div> {% endcomment %}
+                    <div class="top-actions" style='margin-top:10px;'>
+                        <!-- 在上方的模块 -->
+                        <div class="douban-rating" style="margin-bottom: 10px;">
+                            <strong>你的评分：</strong>
+                            {% if rating_self != 0 %}
+                            {% for i in stars%}
+                                <span class="glyphicon glyphicon-heart" aria-hidden="true"></span>
+                            {% endfor %}
+                            {% else %}
+                            <span>暂未评分</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </li>
+        </ul>
+        <div class='function-section'>
+            <button id="task" class="btn btn-success" >电影评论分析</button>
+            <input id="commentadd" type="button" value="添加评论" class="btn btn-success">
+            {% if rating_self == 0 %}
+            <input id="ratingadd" type="button" value="添加评分" class="btn btn-success">
+            {% else %}
+            <input id="ratingedit" type="button" value="修改评分" class="btn btn-success">
+            {% endif %}
+        </div>
+        <div class="comments-section" style="margin-top: 10px;">
+            <h3 style="margin: 0; display: inline-block;">评论区</h3>
+            <div class="comments-list">
+
+                {% for obj in queryset_inner %}
+                <div class="comment">
+                    <div class="comment-content">
+                        <div class="comment-author">
+                            {{ obj.user_nickname }}
+                        <span class="glyphicon glyphicon-thumbs-up" aria-hidden="true">{{obj.votes}}</span>
+                        </div>
+                        <div>{{ obj.content }}</div>
+                        <div class="comment-date">{{ obj.comment_time }}</div>
+                    </div>
+                    <!-- Buttons for each comment -->
+                    <div class="comment-buttons">
+                        <button class="btn btn-sm btn-primary add-vote" data-comment-id='{{obj.comment_id}}'>点赞</button>
+                    </div>
+                </div>
+                {% endfor %}
+                {% for obj in queryset %}
+                <div class="comment">
+                    <div class="comment-content">
+                        <div class="comment-author">
+                            {{ obj.user_nickname }}
+                        <span class="glyphicon glyphicon-thumbs-up" aria-hidden="true">{{obj.votes}}</span>
+                        </div>
+                        <div>{{ obj.content }}</div>
+                        <div class="comment-date">{{ obj.comment_time }}</div>
+                    </div>
+                    <!-- Buttons for each comment -->
+                    <div class="comment-buttons">
+                        <button class="btn btn-sm btn-primary add-vote" data-comment-id='{{obj.comment_id}}'>点赞</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+    {% for row_object in queryset %}
+    {{row_object.xx}}
+    {% endfor %}
+
+    <ul class="pagination">
+        {{ page_string }}
+    </ul>
+    </div>
+    <div class="modal fade" id="commentModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="commentModalLabel">新建</h4>
+                </div>
+                <div class="modal-body">
+
+                    <form id="commentformAdd">
+                        <div class="clearfix">
+                                <div class="col-xs-6">
+                                    <div class="form-group" style="position: relative;margin-bottom: 20px;">
+                                        <label>评论内容</label>
+                                        {{commentform.content}}
+                                        <span class="error-msg" style="color: red;position: absolute;"></span>
+                                    </div>
+                                </div>
+                        </div>
+                    </form>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取 消</button>
+                    <button id="commentbtnSave" type="button" class="btn btn-primary">提 交</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="ratingModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="ratingModalLabel">新建</h4>
+                </div>
+                <div class="modal-body">
+
+                    <form id="ratingformAdd">
+                        <div class="clearfix">
+                                <div class="col-xs-6">
+                                    <div class="form-group" style="position: relative;margin-bottom: 20px;">
+                                        <label>评分</label>
+                                        {{ratingform.rating}}
+                                        <span class="error-msg" style="color: red;position: absolute;"></span>
+                                    </div>
+                                </div>
+                        </div>
+                    </form>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取 消</button>
+                    <button id="ratingbtnSave" type="button" class="btn btn-primary">提 交</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 词云模态框 -->
+    <div id="wordcloud-modal" class="modal fade" tabindex="-1" aria-labelledby="wordcloud-modal-label" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+            <h5 class="modal-title" id="wordcloud-modal-label">{{instance.name}} 高赞评论词云图</h5>
+            <div class="modal-body">
+            <div id="wordcloud-container"></div>
+            </div>
+        </div>
+        </div>
+    </div>
+        
+        
+{% endblock content %}
+
+{% block js %}
+    <script type="text/javascript">
+        var EDIT_ID;
+        $(function () {
+            VoteaddEvent();
+            CommentaddEvent();
+            CommentsaveEvent();
+            RatingaddEvent();
+            RatingeditEvent();
+            RatingsaveEvent();
+            TaskaddEvent();
+        })
+        function VoteaddEvent(){
+            $(".add-vote").click(function(){
+                var commentId = $(this).data("comment-id")
+                $.ajax({
+                    url:'/vote/add/',
+                    type:"post",
+                    data:{
+                        'comment_id':commentId,
+                    },
+                    dataType:"JSON",
+                    success:function(res){
+                        if(res.status){
+                            alert('点赞成功')
+                            location.reload();
+                        }
+                        else{
+                            alert('点赞失败')
+                        }
+                    }
+                })
+            })
+        }
+        function CommentaddEvent(){
+            $("#commentadd").click(function(){
+                $("#commentformAdd")[0].reset();
+                $("#commentModalLabel").text("新建评论");
+                $("#commentModal").modal('show');
+            });
+        }
+        function CommentsaveEvent(){
+            $("#commentbtnSave").click(function(){
+                $(".error-msg").empty();
+                var commentContent = $("#comment_content").val(); // 获取评论内容输入框的值
+                var movie_id = $("#movie_id").text(); 
+                $.ajax({
+                    url:"/comment/add/",
+                    type:"post",
+                    data:{
+                        'content':commentContent,
+                        'movie_id':movie_id,
+                    },
+                    dataType:"JSON",
+                    success:function(res){
+                        if(res.status){
+                            $("#commentformAdd")[0].reset();
+                            $("#commentModal").modal('hide');
+                            location.reload();
+                        }
+                        else{
+                            $.each(res.error, function (name, errorList) {
+                                $("#id_" + name).next().text(errorList[0]);
+                            })
+                        }
+                    }
+                })
+            })
+        }
+        function RatingaddEvent(){
+            $("#ratingadd").click(function(){
+                $("#ratingformAdd")[0].reset();
+                $("#ratingModalLabel").text("新建评分");
+                $("#ratingModal").modal('show');
+            });
+        }
+        function RatingeditEvent(){
+            $("#ratingedit").click(function(){
+                EDIT_ID = $("#movie_id").text();
+                $("#ratingformAdd")[0].reset();
+                $.ajax({
+                    url: "/rating/detail/",
+                    type: "post",
+                    data: {
+                        'movie_id': EDIT_ID,
+                    },
+                    dataType: "JSON",
+                    success: function (res) {
+                        if (res.status) {
+                            // 将数据赋值到对话框中的标签中。
+                            $("#rating_content").val(res.data);
+                            // 修改对话框的标题
+                            $("#ratingModalLabel").text("编辑");
+
+                            // 点击编辑，显示对话框
+                            $('#ratingModal').modal('show');
+                        } else {
+                            alert('出错了');
+                        }
+                    }
+                })
+            });
+        }
+        function RatingsaveEvent(){
+            $("#ratingbtnSave").click(function(){
+                $(".error-msg").empty();
+                if(EDIT_ID)
+                {
+                    do_ratingedit();
+                    EDIT_ID = undefined;
+                }
+                else{
+                    do_ratingadd();
+                }
+            })
+        }
+        function do_ratingedit(){
+            var ratingContent = $("#rating_content").val(); // 获取评论内容输入框的值
+            var movie_id = EDIT_ID;
+            $.ajax({
+                url:"/rating/edit/",
+                type:"post",
+                data:{
+                    'movie_id':movie_id,
+                    'rating':ratingContent,
+                },
+                dataType:"JSON",
+                success:function(res){
+                    if(res.status){
+                        alert("修改成功");
+                        $("#ratingformAdd")[0].reset();
+                        $("#ratingModal").modal('hide');
+                        location.reload();
+                    }
+                    else{
+                        alert('出错了');
+                    }
+                }
+            })
+        }
+        function do_ratingadd(){
+            var ratingContent = $("#rating_content").val(); // 获取评论内容输入框的值
+            var movie_id = $("#movie_id").text(); 
+            $.ajax({
+                url:"/rating/add/",
+                type:"post",
+                data:{
+                    'rating':ratingContent,
+                    'movie_id':movie_id,
+                },
+                dataType:"JSON",
+                success:function(res){
+                    if(res.status){
+                        $("#ratingformAdd")[0].reset();
+                        $("#ratingModal").modal('hide');
+                        location.reload();
+                    }
+                    else{
+                        $.each(res.error, function (name, errorList) {
+                            $("#id_" + name).next().text(errorList[0]);
+                        })
+                    }
+                }
+            })
+        }
+        function TaskaddEvent(){
+            $("#task").click(function(){
+                alert("词云模态框被点击了！");
+                $.ajax({
+                    url:"/wordcloud/get/",
+                    type:"post",
+                    data:{
+                        'movie_id':$('#movie_id').text(),
+                    },
+                    dataType:"JSON",
+                    success:function(res){
+                        if(res.status){
+                            var wordhtml = res.img;
+                            $("#wordcloud-container").html(wordhtml);
+                            $("#wordcloud-modal").modal('show');
+                        }
+                        else{
+                            alert('失败了');
+                        }
+                    }
+                })
+                
+            });
+        }
+    </script>
+{% endblock %}

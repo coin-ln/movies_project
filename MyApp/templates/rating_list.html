@@ -1,0 +1,167 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+    <div class="container">
+        <div style="margin-bottom: 10px">
+        </div>
+        <div class="panel panel-default">
+            <!-- Default panel contents -->
+            <div class="panel-heading">
+                <span class="glyphicon glyphicon-th-list" aria-hidden="true"></span>
+                {{request.session.info.name}}的电影评分列表
+            </div>
+
+            <!-- Table -->
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <th>电影名称</th>
+                    <th>评分</th>
+                    <th>评分时间</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for obj in queryset %}
+                    <tr>
+                        <th>{{ obj.movie_name}}</th>
+                        <th>{{ obj.rating }}</th>
+                        <th>{{ obj.rating_time }}</th>
+                        <td>
+                            <button type='button' class='btn btn-primary btn-xs' id='ratingedit' data-movie-id='{{obj.movie_id}}'>编辑</button>
+                            <button type='button' class='btn btn-danger btn-xs' id='ratingdelete' data-movie-id='{{obj.movie_id}}'>删除</button>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% for obj in queryset %}
+        {{obj.xx}}
+        {% endfor %}
+
+        <ul class="pagination">
+            {{ page_string }}
+        </ul>
+        <div class="modal fade" id="ratingModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="ratingModalLabel">新建</h4>
+                    </div>
+                    <div class="modal-body">
+    
+                        <form id="ratingformAdd">
+                            <div class="clearfix">
+                                    <div class="col-xs-6">
+                                        <div class="form-group" style="position: relative;margin-bottom: 20px;">
+                                            <label>评分</label>
+                                            {{ratingform.rating}}
+                                            <span class="error-msg" style="color: red;position: absolute;"></span>
+                                        </div>
+                                    </div>
+                            </div>
+                        </form>
+    
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">取 消</button>
+                        <button id="ratingbtnSave" type="button" class="btn btn-primary">提 交</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script type="text/javascript">
+        var EDIT_ID;
+        $(function () {
+            RatingdeleteEvent();
+            RatingeditEvent();
+            RatingsaveEvent();
+        })
+        function RatingdeleteEvent(){
+            $(".btn-danger").click(function(){
+                EDIT_ID = $(this).data('movie-id');
+                $.ajax({
+                    url: "/rating/delete/",
+                    type: "post",
+                    data: {
+                        'movie_id': EDIT_ID,
+                    },
+                    dataType: "JSON",
+                    success: function (res) {
+                        if (res.status) {
+                            alert('删除成功');
+                            location.reload();
+                        } else {
+                            alert('出错了');
+                        }
+                    }
+                })
+            })
+        }
+        function RatingeditEvent(){
+            $(".btn-primary").click(function(){
+                EDIT_ID = $(this).data('movie-id');
+                $("#ratingformAdd")[0].reset();
+                $.ajax({
+                    url: "/rating/detail/",
+                    type: "post",
+                    data: {
+                        'movie_id': EDIT_ID,
+                    },
+                    dataType: "JSON",
+                    success: function (res) {
+                        if (res.status) {
+                            // 将数据赋值到对话框中的标签中。
+                            $("#rating_content").val(res.data);
+                            // 修改对话框的标题
+                            $("#ratingModalLabel").text("编辑");
+
+                            // 点击编辑，显示对话框
+                            $('#ratingModal').modal('show');
+                        } else {
+                            alert('出错了');
+                        }
+                    }
+                })
+            });
+        }
+        function RatingsaveEvent(){
+            $("#ratingbtnSave").click(function(){
+                $(".error-msg").empty();
+                do_ratingedit();
+                EDIT_ID = undefined;
+            })
+        }
+        function do_ratingedit(){
+            var ratingContent = $("#rating_content").val(); // 获取评论内容输入框的值
+            var movie_id = EDIT_ID;
+            $.ajax({
+                url:"/rating/edit/",
+                type:"post",
+                data:{
+                    'movie_id':movie_id,
+                    'rating':ratingContent,
+                },
+                dataType:"JSON",
+                success:function(res){
+                    if(res.status){
+                        alert("修改成功");
+                        $("#ratingformAdd")[0].reset();
+                        $("#ratingModal").modal('hide');
+                        location.reload();
+                    }
+                    else{
+                        alert('出错了');
+                    }
+                }
+            })
+        }
+    </script>
+{% endblock %}

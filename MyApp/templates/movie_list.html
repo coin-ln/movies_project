@@ -1,0 +1,129 @@
+{% extends 'layout.html' %}
+
+{% block css %}
+    <!-- 这里可以添加针对电影列表的样式 -->
+    <style>
+        /* 电影列表样式示例 */
+        .movie-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .movie-item {
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        {% comment %} .movie-thumbnail {
+            width: 120px; /* 调整海报宽度 */
+            margin-right: 20px;
+        } {% endcomment %}
+        .movie-thumbnail {
+            width: 171px; /* 自动适应宽度 */
+            height: 250px; /* 调整图像的高度 */
+            margin-right: 20px;
+        }
+
+        .movie-info {
+            flex: 1;
+        }
+
+        .movie-actions {
+            display: flex;
+            align-items: center;
+            margin-left: 10px;
+        }
+
+        .movie-action {
+            margin-right: 10px;
+        }
+    </style>
+{% endblock css %}
+
+{% block content %}
+    <div class="container">
+        <div class='container' style="display: flex; align-items: center;">
+            <h2 style="flex: 1;">电影列表</h2>
+            <div style="width: 300px;">
+                <form method="get">
+                    <div class="input-group">
+                        <input type="text" name="q" class="form-control" placeholder="Search for..."
+                               value="{{ search_data }}">
+                        <span class="input-group-btn">
+                            <button class="btn btn-default" type="submit">
+                                <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                            </button>
+                        </span>
+                    </div>
+                </form>
+            </div>
+        </div>        
+        <ul class="movie-list">
+            {% for obj in queryset %}
+            <li class="movie-item">
+                <div>
+                    <img class="movie-thumbnail" src={{obj.cover}} alt="电影海报:{{obj.name}}">
+                </div>
+                <div class="movie-info">
+                    <h3 class="movie-title"><a href="/movie/subject/{{obj.movie_id}}">{{obj.name}}</a></h3>
+                    <p><strong>导演：</strong>{{ obj.directors }}</p>
+                    <p><strong>演员：</strong>{{ obj.actors }}</p>
+                    <p><strong>类型：</strong>{{ obj.genres }}</p>
+                    <p><strong>语言/时长：</strong>{{ obj.languages }}/{{obj.mins}}分钟</p>
+                    <p class="movie-description"><strong>简介：</strong>{{obj.storyline}}</p>
+                </div>
+                <div class="movie-actions" style="display: flex; flex-direction: column;">
+                    <div class="top-actions">
+                        <!-- 在上方的模块 -->
+                        <div class="douban-rating" style="margin-bottom: 10px;">
+                            <strong>豆瓣评分：</strong>
+                            {% if obj.douban_score != '0.0' %}
+                            <span>{{ obj.douban_score }}</span>
+                            {% else %}
+                            <span>暂未评分</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% comment %} <div class="bottom-actions">
+                        <!-- 在下方的模块 -->
+                            <button class="movie-action">添加收藏</button>
+                            <!-- 添加更多功能按钮 -->
+                    </div> {% endcomment %}
+                    <div class="top-actions" style='margin-top:10px;'>
+                        <!-- 在上方的模块 -->
+                        <div class="douban-rating" style="margin-bottom: 10px;">
+                            <strong>你的评分：</strong>
+                            {% if obj.rating|length %}
+                            {% for i in obj.rating %}
+                                <span class="glyphicon glyphicon-heart" aria-hidden="true"></span>
+                            {% endfor %}
+                            {% else %}
+                            <span>暂未评分</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+            </li>
+            {% endfor %}
+        </ul>
+
+    {% for obj in queryset %}
+    {{obj.xx}}
+    {% endfor %}
+
+    <ul class="pagination">
+        {{ page_string }}
+    </ul>
+    </div>
+{% endblock content %}
+
+{% block js %}
+    <!-- 这里可以添加针对电影列表的 JavaScript 代码 -->
+    <script>
+        // 可以在这里添加一些与电影列表相关的 JavaScript 功能
+    </script>
+{% endblock js %}
